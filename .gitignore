@@ -10,3 +10,7 @@ logs/app.log
 logs/
 *.log
 project-tree.txt
+
+.superpowers/
+.claude/
+docs/superpowers/
