@@ -1,21 +1,21 @@
-# Production stack on the shared Trivia host. Owns the xeliai_app network the API stack joins;
-# published only on the docker0 gateway, so the host nginx container is the sole way in.
+# Stack on the shared Trivia host; owns the network the API stack joins. Published only on the
+# docker0 gateway. Defaults are prod; dev passes `--env-file .env --env-file stack.env`.
 services:
   engine:
     build: .
-    image: xeliai-engine
-    container_name: xeliai_engine
+    image: xeliai-engine:${IMAGE_TAG:-latest}
+    container_name: xeliai_engine${STACK_SUFFIX:-}
     restart: always
     mem_limit: 768m
     env_file: .env
     environment:
-      POSTGRES_HOST: xeliai_vectordb
+      POSTGRES_HOST: xeliai_vectordb${STACK_SUFFIX:-}
       POSTGRES_PORT: "5432"
-      WEB_CONCURRENCY: "2"
+      WEB_CONCURRENCY: ${ENGINE_WORKERS:-2}
     volumes:
       - ./logs:/app/logs
     ports:
-      - "172.17.0.1:8092:8000"
+      - "172.17.0.1:${ENGINE_PORT:-8092}:8000"
     depends_on:
       vectordb:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
 
   vectordb:
     image: pgvector/pgvector:pg16
-    container_name: xeliai_vectordb
+    container_name: xeliai_vectordb${STACK_SUFFIX:-}
     restart: always
     mem_limit: 256m
     environment:
@@ -55,7 +55,7 @@ services:
 
 networks:
   xeliai_app:
-    name: xeliai_app
+    name: ${APP_NETWORK:-xeliai_app}
     driver: bridge
 
 volumes:
